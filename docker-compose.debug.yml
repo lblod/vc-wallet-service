@@ -1,0 +1,22 @@
+services:
+  vc-issuer:
+    #build: ./
+    image: semtech/mu-javascript-template:1.9.0
+    restart: no
+    labels:
+      - logging=true
+    environment:
+      TZ: Europe/Brussels
+      NODE_ENV: development
+    ports:
+      - "8080:80"
+      - "9229:9229"
+    volumes:
+      - ../app-decide/config/vc-issuer:/config
+      - ./:/app
+    networks:
+      - debug
+
+networks:
+  debug:
+    external: true
