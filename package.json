@@ -1,0 +1,38 @@
+{
+  "name": "vc-wallet-service",
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Service to offer users a virtual credentials wallet, based on the work done in the gaia-x project ()",
+  "main": "app.ts",
+  "author": "redpencil.io",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.12.10",
+    "@typescript-eslint/eslint-plugin": "^6.13.2",
+    "eslint": "^8.23.1",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-prettier": "^5.0.0",
+    "prettier": "^3.0.0",
+    "mu-types": "git+https://github.com/rahien/mu-types.git"
+  },
+  "scripts": {
+    "lint:js": "eslint . --cache --ext .ts",
+    "lint:js:fix": "eslint . --cache --ext .ts --fix",
+    "release": "release-it",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@lblod/mu-auth-sudo": "^0.6.1",
+    "body-parser": "^1.19.0",
+    "@gaia-x/did-web-generator": "^1.1.0",
+    "@cef-ebsi/key-did-resolver": "^2.1.1",
+    "@digitalbazaar/did-method-web": "^1.0.1",
+    "@digitalbazaar/ed25519-verification-key-2020": "^4.2.0",
+    "@digitalbazaar/x25519-key-agreement-key-2020": "^3.0.1",
+    "@digitalbazaar/minimal-cipher": "^6.0.0",
+    "crypto-ld": "^7.0.0",
+    "did-resolver": "^4.1.0",
+    "jose": "^6.1.0",
+    "express-promise-router": "^4.1.1"
+  }
+}
