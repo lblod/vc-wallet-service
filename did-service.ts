@@ -1,12 +1,14 @@
 import * as jose from 'jose';
 import { createDidDocument } from '@gaia-x/did-web-generator';
-import { driver, didUrlToHttpsUrl } from '@digitalbazaar/did-method-web';
+import {
+  driver,
+  didUrlToHttpsUrl,
+  httpsUrlToDidUrl,
+} from '@digitalbazaar/did-method-web';
 import { Ed25519VerificationKey2020 } from '@digitalbazaar/ed25519-verification-key-2020';
 import { X25519KeyAgreementKey2020 } from '@digitalbazaar/x25519-key-agreement-key-2020';
 import { getResolver, util } from '@cef-ebsi/key-did-resolver';
 import { JsonWebKey, Resolver } from 'did-resolver';
-
-const hostname = process.env.DOMAIN_NAME || 'localhost';
 
 export async function generateJoseKey(algorithm) {
   const { publicKey, privateKey } = await jose.generateKeyPair(algorithm, {
@@ -20,13 +22,19 @@ export async function generateJoseKey(algorithm) {
   return { publicKey, privateKey, privatePem, publicPem };
 }
 
-export async function createDidWebGaiaX(publicKey) {
+export async function createDidWebGaiaX() {
+  /**
+   * Warning because of the use of x509 certificate, which we can't easily generate,
+   * there can only be one gaia-x web did per hostname and you have to provide this service with the public key
+   */
+  const publicKey = process.env.X509_PUBLIC_KEY || '';
+  const hostname = process.env.DOMAIN_NAME || 'localhost';
   const result = await createDidDocument(
     `https://${hostname}`,
     'public_cert.pem',
     publicKey,
   );
-  return result;
+  return { did: result.id, didDocument: result };
 }
 
 const didWebDriver = driver();
@@ -105,15 +113,17 @@ export async function generateKeyDid() {
   console.log('valid: ', did);
   return {
     did,
-    didDocument: resolved,
+    didDocument: resolved.didDocument,
     publicKey: publicPem,
     privateKey: privatePem,
   };
 }
 
-export async function createDidWebJWT(did) {
+export async function createDidWebJWK(did) {
   const algorithm = 'EdDSA';
-  if (!did.startsWith('did:web:')) {
+  if (!did.startsWith('did:web:') && did.startsWith('https://')) {
+    did = httpsUrlToDidUrl(did).did;
+  } else if (!did.startsWith('did:web:')) {
     throw new Error('DID must start with did:web:');
   }
   const { privatePem, publicPem, publicJwk } =
