@@ -144,3 +144,77 @@ export async function createDidWebJWT(did) {
     privateKey: privatePem,
   };
 }
+
+export async function getDidWeb(did: string) {
+  const forceJsonContent = async (_request, _options, response) => {
+    const modifiedResponse = new Response(response.body, response);
+    modifiedResponse.headers.set('Content-Type', 'application/json');
+    return modifiedResponse;
+  };
+  const didDocument = await didWebDriver.get({
+    did,
+    fetchOptions: {
+      hooks: {
+        afterResponse: [forceJsonContent],
+      },
+    },
+  });
+  return didDocument;
+}
+
+export async function getAuthenticationPksFromDid(didDocument) {
+  const didId = didDocument.id;
+  const auth = didDocument.authentication;
+  const verificationMap = {};
+  (didDocument.verificationMethod || []).forEach((verification) => {
+    verificationMap[verification.id] = verification;
+  });
+
+  const authenticationMethodes = auth.map((a) => {
+    if (typeof a === 'string') {
+      return verificationMap[a];
+    } else {
+      return a;
+    }
+  });
+
+  const pks = await Promise.all(
+    authenticationMethodes.map(async (method) => {
+      if (method.controller != didId) {
+        // ignore, not the owner's did
+        return null;
+      }
+      if (method.type === 'JsonWebKey2020' && method.publicKeyJwk) {
+        return jose.importJWK(method.publicKeyJwk as unknown as jose.JWK);
+      }
+      if (
+        method.type === 'Ed25519VerificationKey2020' &&
+        method.publicKeyMultibase
+      ) {
+        const key = Ed25519VerificationKey2020.from(method.publicKeyMultibase);
+        const jsonWebKey = await (await key).toJwk({ publicKey: true });
+        return jose.importJWK(jsonWebKey);
+      }
+
+      return null;
+    }),
+  );
+  return pks.filter((pk) => pk !== null);
+}
+
+export async function joseSign(
+  plaintext: string,
+  privateKey: string,
+  alg: string,
+) {
+  const pk = await jose.importPKCS8(privateKey, alg);
+  const jws = await new jose.CompactSign(new TextEncoder().encode(plaintext))
+    .setProtectedHeader({ alg })
+    .sign(pk);
+  return jws;
+}
+
+export async function joseVerify(jws: string, pk: jose.CryptoKey) {
+  const { payload, protectedHeader } = await jose.compactVerify(jws, pk);
+  return { payload: new TextDecoder().decode(payload), protectedHeader };
+}
