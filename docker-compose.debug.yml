@@ -1,5 +1,5 @@
 services:
-  vc-issuer:
+  vc-wallet:
     #build: ./
     image: semtech/mu-javascript-template:1.9.0
     restart: no
