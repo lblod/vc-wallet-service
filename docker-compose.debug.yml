@@ -12,7 +12,7 @@ services:
       - '8080:80'
       - '9229:9229'
     volumes:
-      - ../app-decide/config/vc-issuer:/config
+      - ../app-decide/config/vc-wallet:/config
       - ./:/app
     networks:
       - debug

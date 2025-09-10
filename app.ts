@@ -24,7 +24,7 @@ app.use(
 app.use(router);
 router.get('/status', function (req, res) {
   res.send({
-    service: 'vc-issuer-service',
+    service: 'vc-wallet-service',
     status: 'ok',
   });
 });
